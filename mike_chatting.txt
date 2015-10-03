@@ -1,0 +1,309 @@
+[9/17/2015 12:26:25 AM] Mike Schwartz: https://github.com/GluuFederation/api-uma-demo
+[9/17/2015 12:26:29 AM] Mike Schwartz: I just created this project
+[9/17/2015 12:27:08 AM] Mike Schwartz: Let's talk about OAuth2
+[9/17/2015 12:27:15 AM] Mike Schwartz: This diagram:
+[9/17/2015 12:27:15 AM] Mike Schwartz: http://ox.gluu.org/lib/exe/fetch.php?media=oxauth:umademodetail.png
+[9/17/2015 12:27:30 AM] Mike Schwartz: OAuth2 is a very high level standard.
+[9/17/2015 12:27:49 AM] Mike Schwartz: It actually doesn't doesn't define an API
+[9/17/2015 12:27:51 AM] Mike Schwartz: it is really a set of patterns
+[9/17/2015 12:28:08 AM] Mike Schwartz: And an API can use these patterns to create OAuth2 profiles for different purposes.
+[9/17/2015 12:28:59 AM] Mike Schwartz: One profile of OAuth2 for person authentication is OpenID Connect
+[9/17/2015 12:29:06 AM] Mike Schwartz: http://openid.net/connect
+[9/17/2015 12:29:20 AM] Mike Schwartz: The Gluu Server is one of the best OpenID Connect providers out there.
+[9/17/2015 12:29:50 AM] muzamil qadir: making sense
+[9/17/2015 12:30:37 AM] Mike Schwartz: http://oixnet.org/openid-certifications/
+[9/17/2015 12:30:57 AM] Mike Schwartz: You can see that the Gluu Server is ony one of two servers that passes all the conformance profiles
+[9/17/2015 12:31:15 AM] Mike Schwartz: but anyway, OpenID Connect is not the only profile of OAuth2
+[9/17/2015 12:31:20 AM] Mike Schwartz: There is another one called UMA
+[9/17/2015 12:31:25 AM] Mike Schwartz: the User Managed Access Protocol
+[9/17/2015 12:31:48 AM] Mike Schwartz: http://kantarainitiative.org/confluence/display/uma/Home
+[9/17/2015 12:32:08 AM] Mike Schwartz: Google uses OpenID Connect
+[9/17/2015 12:32:11 AM] Mike Schwartz: so does microsoft azure.
+[9/17/2015 12:32:18 AM] Mike Schwartz: So you probably have used it, and just didn't know it.
+[9/17/2015 12:32:30 AM] muzamil qadir: yeah
+[9/17/2015 12:34:26 AM] Mike Schwartz: In openid connect, there are only two parties
+[9/17/2015 12:34:44 AM] Mike Schwartz: 1) the Relying Party -- either a website or mobile app
+[9/17/2015 12:35:00 AM] Mike Schwartz: 2) the OpenID Provider (i.e. Google, the server that holds the password and user information)
+[9/17/2015 12:35:42 AM] Mike Schwartz: In OpenID Connect, you are using an access token to call the user_info endpoint, which returns a Json object that contains information about the person, and what kind of authentication happened (and when)
+[9/17/2015 12:36:00 AM] Mike Schwartz: but note: only two parties...
+[9/17/2015 12:36:15 AM] Mike Schwartz: what happens when your app wants to start calling API's....
+[9/17/2015 12:36:21 AM] Mike Schwartz: this introduces a third party
+[9/17/2015 12:36:33 AM] Mike Schwartz: These API's are not on the mobile app
+[9/17/2015 12:36:43 AM] Mike Schwartz: This is where I want you to consider this diagram
+[9/17/2015 12:37:02 AM] Mike Schwartz: http://ox.gluu.org/lib/exe/fetch.php?media=oxauth:umademodetail.png
+[9/17/2015 12:37:33 AM] muzamil qadir: yes getting
+[9/17/2015 12:37:41 AM] Mike Schwartz: Remember, OAuth2 is just a pattern
+[9/17/2015 12:37:41 AM] Mike Schwartz: So if this diagram were OpenID Connect, the "Authorization Server" would be an OpenID Provider
+[9/17/2015 12:37:42 AM] Mike Schwartz: and the "Requesting Party" would be the "Relying Party"
+[9/17/2015 12:38:04 AM] Mike Schwartz: But in UMA, we introduce this third party, called the "Resource Server"
+[9/17/2015 12:38:10 AM] Mike Schwartz: this is the thing that has the API's....
+[9/17/2015 12:38:39 AM] Mike Schwartz: Now in a nutshell, UMA defines the "RPT token" or resource protection token
+[9/17/2015 12:39:00 AM] Mike Schwartz: in order for the Requesting Party to get access to the API, there will have to be an RPT token
+[9/17/2015 12:39:17 AM] Mike Schwartz: this proves to the Resource Server that the client is authorized to call the API
+[9/17/2015 12:39:25 AM] Mike Schwartz: The starting point for UMA is always: the client calls an API....
+[9/17/2015 12:39:50 AM] Mike Schwartz: Now let's dig a little deeper.
+[9/17/2015 12:40:00 AM] Mike Schwartz: What if you don't use UMA...
+[9/17/2015 12:40:06 AM] Mike Schwartz: this is typical today....
+[9/17/2015 12:40:22 AM] Mike Schwartz: what happens is that the person that writes the API ends up hard coding the security
+[9/17/2015 12:40:25 AM] Mike Schwartz: in their API's
+[9/17/2015 12:40:36 AM | Edited 12:40:40 AM] Mike Schwartz: maybe they create their own oauth2 server api's
+[9/17/2015 12:40:45 AM] Mike Schwartz: but its a total mess
+[9/17/2015 12:41:16 AM | Edited 12:41:20 AM] Mike Schwartz: if your a big company, and every single API is issuing their own tokens, and writing their own code to implement security policies... it becomes totally unmanagable
+[9/17/2015 12:41:53 AM] Mike Schwartz: If you need to update a security policy, then you need to update the code....
+[9/17/2015 12:42:01 AM] Mike Schwartz: and that can involve re-qa-ing the code
+[9/17/2015 12:42:04 AM] muzamil qadir: like we do Restful api's
+[9/17/2015 12:42:08 AM] Mike Schwartz: and can build a huge delay into the system.
+[9/17/2015 12:42:21 AM] muzamil qadir: to do update, delete
+[9/17/2015 12:42:29 AM] Mike Schwartz: yes, I'm assuming the Resource Server is REST
+[9/17/2015 12:42:36 AM] Mike Schwartz: so right...
+[9/17/2015 12:42:45 AM] Mike Schwartz: who gets to do a DELETE or UPDATE ?
+[9/17/2015 12:42:50 AM] Mike Schwartz: which clients ?
+[9/17/2015 12:42:52 AM] Mike Schwartz: which people?
+[9/17/2015 12:43:10 AM] Mike Schwartz: many API's hard code this security business logic in their API's
+[9/17/2015 12:43:16 AM] Mike Schwartz: and it leads to disaster...
+[9/17/2015 12:43:26 AM] Mike Schwartz: So this is not new ...
+[9/17/2015 12:43:37 AM] Mike Schwartz: there is already a common pattern in use to centralize security
+[9/17/2015 12:43:48 AM] Mike Schwartz: its called "Policy Enforcment Point - Policy Decision Point"
+[9/17/2015 12:44:32 AM] Mike Schwartz: for example, you can see it here:
+[9/17/2015 12:44:32 AM] Mike Schwartz: http://stevenimmons.org/2012/02/policy-enforcement-point-pattern/
+[9/17/2015 12:44:54 AM] Mike Schwartz: although ignore the stuff about XACML
+[9/17/2015 12:44:57 AM] Mike Schwartz: that's crappy SOAP stuff
+[9/17/2015 12:45:17 AM] Mike Schwartz: but the basic pattern PEP - PDP has been in use for decades
+[9/17/2015 12:45:36 AM] Mike Schwartz: What UMA does is introduce a PEP / PDP pattern that uses OAuth2...
+[9/17/2015 12:45:39 AM] muzamil qadir: SOAP the old protocol now replaced with json
+[9/17/2015 12:45:45 AM] muzamil qadir: I think
+[9/17/2015 12:45:52 AM] Mike Schwartz: and leverages OpenID Connect for person and client authentication.
+[9/17/2015 12:46:08 AM] Mike Schwartz: So going back to the original diagram
+[9/17/2015 12:46:20 AM] Mike Schwartz: The Gluu Server is the Policy Decision Point (or Authorization Server)
+[9/17/2015 12:46:38 AM] Mike Schwartz: it holds the central policies that define who can get to what API's using what clients
+[9/17/2015 12:47:10 AM] Mike Schwartz: The Gluu Server can also look at time of day, network address, call fraud detection API's, and do a lot of other fancy stuff to figure out if a transaction should be allowed.
+[9/17/2015 12:47:34 AM] Mike Schwartz: going back to the diagram, this is all accomplished with the RPT token
+[9/17/2015 12:47:50 AM] Mike Schwartz: The Resource Server is the policy enforcement point
+[9/17/2015 12:48:03 AM] Mike Schwartz: it makes the decision -- should I serve this API
+[9/17/2015 12:48:15 AM] Mike Schwartz: But it relies on the presenece of the RPT token
+[9/17/2015 12:48:21 AM] Mike Schwartz: If RPT token is valid... allow access
+[9/17/2015 12:48:40 AM] Mike Schwartz: So it enables the delegation of the Policies to a central server....
+[9/17/2015 12:48:56 AM] Mike Schwartz: So going a little deeper....
+[9/17/2015 12:49:13 AM] Mike Schwartz: Let's start with our mobile app calling an API
+[9/17/2015 12:49:22 AM] Mike Schwartz: 1) On first call, there is no RPT token
+[9/17/2015 12:49:57 AM] Mike Schwartz: 2) Resource Server says -- hmmm no RPT token.... I need to get a permission ticket from the Authorization Server... this is just a number
+[9/17/2015 12:50:09 AM] Mike Schwartz: and the RS returns this to the UMA client (mobile app)
+[9/17/2015 12:50:23 AM] Mike Schwartz: 3) UMA client presents this ticket to the Authorization Server
+[9/17/2015 12:50:37 AM] Mike Schwartz: 4) Authorization Server evaluates all the policies associated with that permission ticket
+[9/17/2015 12:50:50 AM] Mike Schwartz: if ok.... returns an RPT token -- this is just a bearer token
+[9/17/2015 12:51:01 AM] Mike Schwartz: 5) UMA client calls API again--this time with the RPT token
+[9/17/2015 12:51:25 AM] Mike Schwartz: 6) Resource server takes bearer token (just a guid...) and calls an API on the Authorization Server called "token introspection API"
+[9/17/2015 12:52:04 AM] Mike Schwartz: this returns the JWT token -- a json object
+[9/17/2015 12:52:19 AM] Mike Schwartz: because the bearer token by itself is not very informative to the Resource Server....
+[9/17/2015 12:52:35 AM] Mike Schwartz: assuming the token looks ok, the Resource Server grants access...
+[9/17/2015 12:53:01 AM] Mike Schwartz: Does all that make sense....
+[9/17/2015 12:53:13 AM] Mike Schwartz: sort of a long windy trail to calling an API ... :-)
+[9/17/2015 12:53:55 AM] muzamil qadir: yeah interesting but that's with security
+[9/17/2015 12:54:52 AM | Edited 12:54:54 AM] Mike Schwartz: so ok, getting to our project
+[9/17/2015 12:55:15 AM] Mike Schwartz: If you want to use UMA to secure your API's you need to do two things
+[9/17/2015 12:55:31 AM | Edited 12:55:54 AM] Mike Schwartz: 1) update your API Server (Resource Server)
+[9/17/2015 12:55:39 AM] Mike Schwartz: 2) update your mobile/web application (UMA Client)
+[9/17/2015 12:56:12 AM] Mike Schwartz: We want to create a simple project that just shows this
+[9/17/2015 12:56:22 AM] Mike Schwartz: So we want to write a very simple API
+[9/17/2015 12:56:28 AM] Mike Schwartz: that just returns "Hello World" for GET....
+[9/17/2015 12:56:59 AM] Mike Schwartz: Actually, Smit Joshi, another new Gluu victim, I mean employee is going to work on this
+[9/17/2015 12:57:10 AM] Mike Schwartz: The resource server...
+[9/17/2015 12:57:20 AM] Mike Schwartz: And we'd like you to work on a python client that calls the API
+[9/17/2015 12:57:46 AM] Mike Schwartz: So your client would have to obtain the RPT token, and call the API....
+[9/17/2015 12:58:36 AM] Mike Schwartz: You'd also have to get a client id and secret (via OpenID Connect Dynamic Client Registration) in order to get an RPT token
+[9/17/2015 12:58:37 AM] muzamil qadir: On 1st call get token right?
+[9/17/2015 12:58:45 AM] Mike Schwartz: the flow is this....
+[9/17/2015 12:58:51 AM] Mike Schwartz: first call, you get back permission ticket
+[9/17/2015 12:58:59 AM] Mike Schwartz: You present this permission ticket to the AS
+[9/17/2015 12:59:03 AM] Mike Schwartz: get RPT
+[9/17/2015 12:59:05 AM] Mike Schwartz: then re-call API
+[9/17/2015 12:59:19 AM] Mike Schwartz: the first call will return 403
+[9/17/2015 12:59:25 AM] Mike Schwartz: because you haven't presented the RPT
+[9/17/2015 12:59:30 AM] Mike Schwartz: so you actually are unauthorized...
+[9/17/2015 1:00:34 AM] Mike Schwartz: Now the problem is there is no python library for UMA....
+[9/17/2015 1:00:44 AM] Mike Schwartz: however, there is a very good new OAuth2 library
+[9/17/2015 1:00:45 AM] Mike Schwartz: https://github.com/joestump/python-oauth2
+[9/17/2015 1:01:10 AM | Edited 1:01:12 AM] Mike Schwartz: So you will have to write some helper methods in order to get your code working ...
+[9/17/2015 1:01:19 AM] Mike Schwartz: but you won't have to write everything from scratch
+[9/17/2015 1:01:49 AM] muzamil qadir: yes
+[9/17/2015 1:02:03 AM] Mike Schwartz: Does that sound like something you can take on ?
+[9/17/2015 1:03:15 AM] muzamil qadir: yeah challenging one
+[9/17/2015 1:03:37 AM] Mike Schwartz: we like challenging here...
+[9/17/2015 1:03:50 AM] muzamil qadir: to understand and implement
+[9/17/2015 1:03:52 AM] Mike Schwartz: Now a good place to get started is deploying your own gluu server
+[9/17/2015 1:04:33 AM] Mike Schwartz: http://www.gluu.org/docs/admin-guide/deployment/ubuntu/
+[9/17/2015 1:04:41 AM] Mike Schwartz: I would recommend using VMPlayer
+[9/17/2015 1:04:49 AM] Mike Schwartz: and creating a 2GB instance
+[9/17/2015 1:04:57 AM] Mike Schwartz: When you run setup
+[9/17/2015 1:05:13 AM] Mike Schwartz: just install httpd, oxauth, oxtrust, ldap, and oxauth-rp
+[9/17/2015 1:05:17 AM] Mike Schwartz: it will prompt you....
+[9/17/2015 1:05:18 AM] muzamil qadir: I already have that
+[9/17/2015 1:05:25 AM] muzamil qadir: centos as VM
+[9/17/2015 1:05:37 AM] Mike Schwartz: or centos...
+[9/17/2015 1:06:13 AM] Mike Schwartz: you can get started on using dynamic client registration to get a client id and secret from the Gluu Server
+[9/17/2015 1:06:29 AM] Mike Schwartz: http://openid.net/specs/openid-connect-registration-1_0.html
+[9/17/2015 1:06:32 AM] Mike Schwartz: All specs are here:
+[9/17/2015 1:06:36 AM] Mike Schwartz: htttp://openid.net/connect
+[9/17/2015 1:07:08 AM] Mike Schwartz: Don't worry
+[9/17/2015 1:07:11 AM] Mike Schwartz: we'll help you along the way....
+[9/17/2015 1:07:30 AM] muzamil qadir: sure thing
+[9/17/2015 1:08:46 AM] muzamil qadir: do we need to understand the RFC protocols to get our hands nip into this security stance
+[9/17/2015 1:08:47 AM] Mike Schwartz: along the way, if you do a good job, we'll also start engaging you to help with more issues
+[9/17/2015 1:09:06 AM] Mike Schwartz: well
+[9/17/2015 1:09:20 AM] Mike Schwartz: it never hurts to have a background in the theory
+[9/17/2015 1:09:33 AM] Mike Schwartz: its hard to read through the specs and make sense out of it.
+[9/17/2015 1:09:47 AM] Mike Schwartz: but you should definitely take a look
+[9/17/2015 1:10:00 AM] muzamil qadir: sure
+[9/17/2015 1:10:31 AM] muzamil qadir: I never considered security explicitly till now
+[9/17/2015 1:10:39 AM] muzamil qadir: just relied on the frameworks
+[9/17/2015 1:11:10 AM] muzamil qadir: but I think this is a good way and opportunity to excel in security and its implementation
+[9/17/2015 1:11:21 AM] muzamil qadir: feeling happy to have this
+[9/17/2015 1:11:21 AM] Mike Schwartz: like most programmers....
+[9/17/2015 1:11:37 AM] Mike Schwartz: that's the thing, not many programmers have a deep understanding of security
+[9/17/2015 1:11:42 AM] Mike Schwartz: and the few that do, are in high demand
+[9/17/2015 1:12:08 AM] Mike Schwartz: once you get good, we'll be able to get you a much higher rate
+[9/17/2015 1:12:23 AM] Mike Schwartz: so its a great career opportunity
+[9/17/2015 1:12:30 AM] Mike Schwartz: and honestly, its not rocket science.
+[9/17/2015 1:12:35 AM] Mike Schwartz: anything unfamiliar is hard
+[9/17/2015 1:12:45 AM] Mike Schwartz: once you get the hang of it, its really not too bad
+[9/17/2015 1:12:49 AM] Mike Schwartz: its just api's..
+[9/17/2015 1:13:02 AM] Mike Schwartz: anyway, the first task is this:
+[9/17/2015 1:13:07 AM] muzamil qadir: I developed restful apis
+[9/17/2015 1:13:08 AM] Mike Schwartz: deploy the gluu server
+[9/17/2015 1:13:16 AM] muzamil qadir: but this is different thing
+[9/17/2015 1:13:17 AM] Mike Schwartz: call the discovery url
+[9/17/2015 1:13:27 AM] Mike Schwartz: https://<hostname>/.well-known/openid-configuration
+[9/17/2015 1:13:43 AM] Mike Schwartz: this will return the URL of the dynamic client registration API
+[9/17/2015 1:13:46 AM] Mike Schwartz: and register a client
+[9/17/2015 1:13:54 AM] Mike Schwartz: that would be a great start
+[9/17/2015 1:14:00 AM] Mike Schwartz: and pretty straight forward.
+[9/17/2015 1:14:06 AM] Mike Schwartz: From there, you'll be ready to go to the next step
+[9/17/2015 1:14:13 AM] Mike Schwartz: Calling the API on the resource server
+[9/17/2015 1:14:54 AM] muzamil qadir: can I use djangorestframework module to do this?
+[9/17/2015 1:15:02 AM] Mike Schwartz: no
+[9/17/2015 1:15:09 AM] Mike Schwartz: sorry
+[9/17/2015 1:15:18 AM] Mike Schwartz: but as part of this project, we want to show a simple command line script
+[9/17/2015 1:15:18 AM] muzamil qadir: just to write a simple script
+[9/17/2015 1:15:28 AM] muzamil qadir: ohh ok got it
+[9/17/2015 1:15:31 AM] Mike Schwartz: remember, you're not writing api
+[9/17/2015 1:15:35 AM] Mike Schwartz: you are writing the client
+[9/17/2015 1:15:53 AM] Mike Schwartz: actually, the customer we are doing this for want to see a demo with curl...
+[9/17/2015 1:16:01 AM] Mike Schwartz: and I said... that's f**ing crazy
+[9/17/2015 1:16:08 AM] Mike Schwartz: can we at least use python....
+[9/17/2015 1:16:18 AM] Mike Schwartz: but I think django is too much framework for them
+[9/17/2015 1:16:36 AM] muzamil qadir: yeah got it
+[9/17/2015 1:16:58 AM] Mike Schwartz: but I was looking at that oauth2 library
+[9/17/2015 1:17:07 AM] Mike Schwartz: and its wraps httplib
+[9/17/2015 1:17:13 AM] Mike Schwartz: so I think it will not be too bad
+[9/17/2015 1:17:27 AM] Mike Schwartz: it will handle some of the low level stuff
+[9/17/2015 1:19:06 AM] muzamil qadir: yes
+[9/17/2015 1:23:01 AM] Mike Schwartz: ok, I created a folder in github for you to checkin the client code.
+[9/17/2015 1:23:07 AM] Mike Schwartz: and any installation instructions.
+[9/17/2015 1:23:22 AM] Mike Schwartz: https://github.com/GluuFederation/api-uma-demo
+[9/17/2015 1:23:33 AM] Mike Schwartz: you can put your stuff in the uma_client folder.
+[9/17/2015 1:23:42 AM] Mike Schwartz: I sent you an invite to the github team
+[9/17/2015 1:23:53 AM] muzamil qadir: ok,
+[9/17/2015 1:23:54 AM] Mike Schwartz: checkin often
+[9/17/2015 1:24:02 AM] Mike Schwartz: we like to monitor github for progress
+[9/17/2015 1:24:13 AM] Mike Schwartz: and it gives us early opporutnity to provide feedback
+[9/17/2015 1:25:00 AM] muzamil qadir: sure I will do git commits
+[9/17/2015 1:29:17 AM] muzamil qadir: do I need to log hours while working this
+[9/17/2015 1:29:25 AM] muzamil qadir: or this is just a test task?
+[9/17/2015 1:35:56 AM] Mike Schwartz: no please log hours
+[9/17/2015 1:36:07 AM] Mike Schwartz: If you're reading, we consider that your time.
+[9/17/2015 1:36:29 AM] Mike Schwartz: But if your testing, deploying, or doing anything else that involved hands on the keyboard, by all means, bill for it.
+[9/17/2015 1:37:05 AM] Mike Schwartz: Reading is education... which we encourage you to do, but education is not just for our job
+[9/17/2015 1:37:13 AM] Mike Schwartz: its for your life... :-)
+[9/17/2015 1:38:09 AM] muzamil qadir: ok I got it
+[9/17/2015 1:38:16 AM] muzamil qadir: thanks for clarifying
+[9/17/2015 1:55:02 AM] Mike Schwartz: I'm adding you to our support chat
+[9/17/2015 1:55:12 AM | Edited 1:55:38 AM] Mike Schwartz: if you have questions, that's a good place to start
+[9/17/2015 1:55:21 AM] muzamil qadir: sure
+[9/17/2015 1:55:48 AM] Mike Schwartz: the whole team is on that chat
+
+9/29/2015 1:31:58 AM] Mike Schwartz: If you ware to write a sample UMA Client
+[9/29/2015 1:32:03 AM] Mike Schwartz: you will need this...
+[9/29/2015 1:42:26 AM] muzamil qadir: yes sir I deployed Gluu server on local VM
+[9/29/2015 1:42:51 AM] muzamil qadir: and I get the message that the server already running
+[9/29/2015 1:46:06 AM] Mike Schwartz: ok, so to call an UMA protected API
+[9/29/2015 1:46:11 AM] Mike Schwartz: You need to do a few things:
+[9/29/2015 1:46:26 AM] Mike Schwartz: 1) Register your client with the Gluu Server
+[9/29/2015 1:46:45 AM] Mike Schwartz: so you have a client id and secret
+[9/29/2015 1:46:53 AM] Mike Schwartz: Using Openid Connect dynamic client registration.
+[9/29/2015 1:47:05 AM] Mike Schwartz: 2) Call API, receive a permission ticket
+[9/29/2015 1:47:10 AM] muzamil qadir: yeah, I will get after 1st request
+[9/29/2015 1:47:33 AM] Mike Schwartz: 3) present permission ticket to Gluu Server to request RPT token
+[9/29/2015 1:47:54 AM] Mike Schwartz: 4) Present RPT token to Resource Server
+[9/29/2015 1:47:58 AM] Mike Schwartz: when you call the PAI again...
+[9/29/2015 1:48:13 AM] Mike Schwartz: You have the skype ID of SMit?
+[9/29/2015 1:48:17 AM] Mike Schwartz: He is working on the Resource Server.
+[9/29/2015 1:48:30 AM] muzamil qadir: nope
+[9/29/2015 1:48:41 AM] muzamil qadir: going to add him
+[9/29/2015 1:49:36 AM] Mike Schwartz: jsmit_greenapex
+[9/29/2015 1:49:41 AM] muzamil qadir: sent request to smit joshi
+[9/29/2015 2:17:48 AM] muzamil qadir: talked to smit
+[9/29/2015 2:17:59 AM] muzamil qadir: we are going to discuss things
+[9/29/2015 2:18:32 AM] muzamil qadir: after we are getting some idea how things work (training) we will be good to go
+[9/29/2015 2:19:21 AM] muzamil qadir: he is on its initial too
+[9/29/2015 2:19:29 AM] Mike Schwartz: ok.
+[9/29/2015 2:19:35 AM] muzamil qadir: he said he will provide java code
+[9/29/2015 2:19:35 AM] Mike Schwartz: he is writing the API you have to call...
+[9/29/2015 2:19:42 AM] muzamil qadir: and I need to use that
+[9/29/2015 2:19:46 AM] Mike Schwartz: He is writing the resource server
+[9/29/2015 2:19:50 AM] Mike Schwartz: you are writing the UMA Client
+[9/29/2015 2:19:54 AM] Mike Schwartz: so there is no overlap
+[9/29/2015 2:20:15 AM] muzamil qadir: yes, I need to use JYTHON
+[9/29/2015 2:20:18 AM] muzamil qadir: ?
+[9/29/2015 2:20:22 AM] muzamil qadir: for java and python
+[9/29/2015 2:20:26 AM] Mike Schwartz: no...
+[9/29/2015 2:20:39 AM] muzamil qadir: ok I will just call the api
+[9/29/2015 2:20:40 AM] Mike Schwartz: http://ox.gluu.org/lib/exe/fetch.php?media=oxauth:umademodetail.png
+[9/29/2015 2:20:41 AM] muzamil qadir: right
+[9/29/2015 2:20:58 AM] Mike Schwartz: The UMA client is the requesting party
+[9/29/2015 2:21:33 AM] Mike Schwartz: You should use this OAuth2 python library:
+[9/29/2015 2:21:33 AM] Mike Schwartz: http://www.gluu.co/python-oauth2
+[9/29/2015 2:21:57 AM] muzamil qadir: right
+[9/29/2015 2:22:00 AM] Mike Schwartz: In that diagram above, there are two oauth flows
+[9/29/2015 2:22:10 AM] Mike Schwartz: 1) Call API written by SMIT
+[9/29/2015 2:22:16 AM] Mike Schwartz: this will require the RPT token
+[9/29/2015 2:22:33 AM] Mike Schwartz: 2) Call Authorization API on the Gluu Server
+[9/29/2015 2:22:37 AM] Mike Schwartz: this will require AAT.
+[9/29/2015 2:23:00 AM] Mike Schwartz: Both are OAuth2 flows to different providers.
+[9/29/2015 2:23:03 AM] muzamil qadir: so gluu is our centeral server
+[9/29/2015 2:23:12 AM] Mike Schwartz: Gluu is the Policy Decision Point
+[9/29/2015 2:23:21 AM] Mike Schwartz: The Resource Server is the Policy Enforcement Point
+[9/29/2015 2:23:52 AM] Mike Schwartz: http://stevenimmons.org/wp-content/uploads/2012/02/PEPPattern_thumb.png
+[9/29/2015 2:24:00 AM] Mike Schwartz: There are many PEP's
+[9/29/2015 2:24:03 AM] Mike Schwartz: but only one PDP
+[9/29/2015 2:24:09 AM] Mike Schwartz: The PEP is dumb....
+[9/29/2015 2:24:14 AM] Mike Schwartz: it doesn't know what the policies are
+[9/29/2015 2:24:21 AM] Mike Schwartz: It just makes sure that there is a valid RPT token...
+[9/29/2015 2:24:37 AM] Mike Schwartz: The flow is simple.
+[9/29/2015 2:24:42 AM] Mike Schwartz: 1) request API (no RPT)
+[9/29/2015 2:24:50 AM] Mike Schwartz: 2) RS returns permission ticket
+[9/29/2015 2:24:58 AM] Mike Schwartz: 3) present permission ticket to Gluu Server
+[9/29/2015 2:25:04 AM] Mike Schwartz: 4) Gluu Server returns RPT
+[9/29/2015 2:25:11 AM] Mike Schwartz: 5) request API (with RPT)
+[9/29/2015 2:25:47 AM] muzamil qadir: right
+[9/29/2015 2:26:21 AM] Mike Schwartz: UMA Core: https://docs.kantarainitiative.org/uma/rec-uma-core-v1_0.html
+[9/29/2015 2:27:13 AM] Mike Schwartz: To get client ID, you need to register
+[9/29/2015 2:27:14 AM] Mike Schwartz: http://openid.net/specs/openid-connect-registration-1_0.html
+[9/29/2015 2:27:30 AM] Mike Schwartz: Gluu Server has the client ID / secret
+[9/29/2015 2:27:40 AM] Mike Schwartz: (i.e. the RS does not issue you a client ID and secret)
+[9/29/2015 2:27:58 AM] Mike Schwartz: Ok, please dig into it.
+[9/29/2015 2:28:05 AM] Mike Schwartz: I'll be travelling tomorrow
+[9/29/2015 2:28:19 AM] Mike Schwartz: You shouldn't care what language the RS or Gluu Server is written in...
+[9/29/2015 2:28:23 AM] Mike Schwartz: they are just API's to you.
+[9/29/2015 2:28:30 AM] Mike Schwartz: We need you to complete this task by this friday
+[9/29/2015 2:28:46 AM] muzamil qadir: sure thing
+[9/29/2015 2:28:59 AM] Mike Schwartz: good luck!
+[9/29/2015 2:29:13 AM] Mike Schwartz: one more hint;
+[9/29/2015 2:29:17 AM] Mike Schwartz: for discovery:
+[9/29/2015 2:29:34 AM | Removed 2:29:55 AM] Mike Schwartz: This message has been removed.
+[9/29/2015 2:29:45 AM] Mike Schwartz: https://<hostname>/.well-known/openid-configuration
+[9/29/2015 2:29:50 AM] Mike Schwartz: https://<hostname>/.well-known/uma-configuration
+[9/29/2015 2:30:04 AM] Mike Schwartz: where hostname = gluu server hostname
+[9/29/2015 2:30:18 AM] Mike Schwartz: this will return the endpoints for the Authorization API (UMA)
+[9/29/2015 2:30:31 AM] Mike Schwartz: and for Dynamic Client Registration (OpenID Connect)
+[9/29/2015 2:31:13 AM] muzamil qadir: where can I find gluu server host name?
+[9/29/2015 2:31:24 AM] muzamil qadir: is it on doc?
